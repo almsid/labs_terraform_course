@@ -21,11 +21,11 @@ locals {
 # HINT: At minimum you need cidr_block
 resource "aws_vpc" "this" {
   # TODO: Add required arguments here
-  # cidr_block = ?
+  cidr_block = var.vpc_cidr
 
   # TODO: Add optional arguments for DNS
-  # enable_dns_hostnames = ?
-  # enable_dns_support = ?
+  enable_dns_hostnames = var.enable_dns_hostnames
+  enable_dns_support   = var.enable_dns_support
 
   tags = merge(local.all_tags, {
     Name = var.vpc_name
@@ -38,7 +38,7 @@ resource "aws_vpc" "this" {
 # HINT: It allows communication between your VPC and the internet
 resource "aws_internet_gateway" "this" {
   # TODO: Attach this IGW to your VPC
-  # vpc_id = ?
+  vpc_id = aws_vpc.this.id
 
   tags = merge(local.all_tags, {
     Name = "${var.vpc_name}-igw"
@@ -53,19 +53,20 @@ resource "aws_internet_gateway" "this" {
 resource "aws_subnet" "public" {
   # TODO: Use count or for_each to create multiple subnets
   # count = ?
-  # for_each = ?
+  count = length(var.availability_zones)
 
   # TODO: Add required arguments
-  # vpc_id = ?
-  # cidr_block = ?
-  # availability_zone = ?
+  vpc_id            = aws_vpc.this.id
+  cidr_block        = element(var.public_subnet_cidrs, count.index)
+  availability_zone = element(var.availability_zones, count.index)
 
   # TODO: Make these subnets "public"
   # RESEARCH: What makes a subnet public vs private?
   # HINT: map_public_ip_on_launch = true
+  map_public_ip_on_launch = true
 
   tags = merge(local.all_tags, {
-    Name = "${var.vpc_name}-public-${count.index + 1}"  # Adjust if using for_each
+    Name = "${var.vpc_name}-public-${count.index + 1}"
     Type = "Public"
   })
 }
@@ -75,9 +76,15 @@ resource "aws_subnet" "public" {
 # THINK: Should private subnets auto-assign public IPs?
 resource "aws_subnet" "private" {
   # TODO: Similar to public subnets, but for private subnet CIDRs
+  count = length(var.availability_zones)
+
+  # TODO: Add required arguments
+  vpc_id            = aws_vpc.this.id
+  cidr_block        = element(var.private_subnet_cidrs, count.index)
+  availability_zone = element(var.availability_zones, count.index)
 
   tags = merge(local.all_tags, {
-    Name = "${var.vpc_name}-private-${count.index + 1}"  # Adjust if using for_each
+    Name = "${var.vpc_name}-private-${count.index + 1}"
     Type = "Private"
   })
 }
@@ -88,7 +95,7 @@ resource "aws_subnet" "private" {
 # HINT: It controls where network traffic is directed
 resource "aws_route_table" "public" {
   # TODO: Associate with your VPC
-  # vpc_id = ?
+  vpc_id = aws_vpc.this.id
 
   tags = merge(local.all_tags, {
     Name = "${var.vpc_name}-public-rt"
@@ -102,9 +109,9 @@ resource "aws_route_table" "public" {
 # HINT: 0.0.0.0/0 means "all traffic"
 resource "aws_route" "public_internet" {
   # TODO: Add route to internet gateway
-  # route_table_id = ?
-  # destination_cidr_block = "0.0.0.0/0"
-  # gateway_id = ?
+  route_table_id         = aws_route_table.public.id
+  destination_cidr_block = "0.0.0.0/0"
+  gateway_id             = aws_internet_gateway.this.id
 }
 
 # TODO: Associate public subnets with public route table
@@ -113,9 +120,9 @@ resource "aws_route" "public_internet" {
 # HINT: Use count or for_each matching your subnets
 resource "aws_route_table_association" "public" {
   # TODO: Associate each public subnet with the public route table
-  # count = ?
-  # subnet_id = ?
-  # route_table_id = ?
+  count          = length(aws_subnet.public)
+  subnet_id      = element(aws_subnet.public, count.index).id
+  route_table_id = aws_route_table.public.id
 }
 
 # TODO: Create route table for private subnets
@@ -124,7 +131,7 @@ resource "aws_route_table_association" "public" {
 # NOTE: We're not implementing NAT Gateway in this lab (cost optimization)
 resource "aws_route_table" "private" {
   # TODO: Create private route table
-  # vpc_id = ?
+  vpc_id = aws_vpc.this.id
 
   tags = merge(local.all_tags, {
     Name = "${var.vpc_name}-private-rt"
@@ -136,9 +143,9 @@ resource "aws_route_table" "private" {
 # RESEARCH: Similar to public subnet associations
 resource "aws_route_table_association" "private" {
   # TODO: Associate each private subnet with the private route table
-  # count = ?
-  # subnet_id = ?
-  # route_table_id = ?
+  count          = length(aws_subnet.private)
+  subnet_id      = element(aws_subnet.private, count.index).id
+  route_table_id = aws_route_table.private.id
 }
 
 # TODO: Create DB subnet group for RDS
@@ -147,8 +154,8 @@ resource "aws_route_table_association" "private" {
 # HINT: RDS requires specific subnet configuration for high availability
 resource "aws_db_subnet_group" "this" {
   # TODO: Configure DB subnet group
-  # name = "${var.vpc_name}-db-subnet-group"
-  # subnet_ids = [list of private subnet IDs]
+  name       = "${var.vpc_name}-db-subnet-group"
+  subnet_ids = [for s in aws_subnet.private : s.id]
 
   tags = merge(local.all_tags, {
     Name = "${var.vpc_name}-db-subnet-group"

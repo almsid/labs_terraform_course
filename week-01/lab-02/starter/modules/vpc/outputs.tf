@@ -21,7 +21,7 @@ output "public_subnet_ids" {
   # TODO: Extract IDs from your public subnet resources
   # HINT: aws_subnet.public[*].id if using count
   # HINT: values(aws_subnet.public)[*].id if using for_each
-  value = []  # TODO: Replace with actual subnet IDs
+  value = aws_subnet.public[*].id # TODO: Replace with actual subnet IDs
 }
 
 # TODO: Output private subnet IDs
@@ -30,7 +30,7 @@ output "public_subnet_ids" {
 output "private_subnet_ids" {
   description = "IDs of the private subnets"
   # TODO: Extract IDs from your private subnet resources
-  value = []  # TODO: Replace with actual subnet IDs
+  value = aws_subnet.private[*].id # TODO: Replace with actual subnet IDs
 }
 
 # TODO: Output DB subnet group name
@@ -38,7 +38,7 @@ output "private_subnet_ids" {
 output "db_subnet_group_name" {
   description = "Name of the DB subnet group"
   # TODO: Reference your DB subnet group resource
-  value = ""  # TODO: Replace with actual DB subnet group name
+  value = aws_db_subnet_group.this.name # TODO: Replace with actual DB subnet group name
 }
 
 # TODO: Output availability zones

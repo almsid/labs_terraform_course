@@ -31,6 +31,10 @@ variable "vpc_cidr" {
   type        = string
   # TODO: Add validation to ensure this is a valid CIDR block
   # HINT: Use can() function with regex or cidrhost()
+  validation {
+    condition     = can(cidrhost(var.vpc_cidr, 1))
+    error_message = "Invalid CIDR block."
+  }
 }
 
 # TODO: Add availability_zones variable
@@ -41,6 +45,10 @@ variable "availability_zones" {
   type        = list(string)
   # TODO: Add validation to ensure at least 2 AZs
   # HINT: Use length() function
+  validation {
+    condition     = length(var.availability_zones) >= 2
+    error_message = "At least 2 availability zones are required."
+  }
 }
 
 # TODO: Add public_subnet_cidrs variable
@@ -50,6 +58,10 @@ variable "public_subnet_cidrs" {
   description = "CIDR blocks for public subnets"
   type        = list(string)
   # TODO: Add validation to ensure number of CIDRs matches number of AZs
+  validation {
+    condition     = length(var.public_subnet_cidrs) == length(var.availability_zones)
+    error_message = "Number of public subnets must match number of availability zones."
+  }
 }
 
 # TODO: Add private_subnet_cidrs variable
@@ -59,6 +71,10 @@ variable "private_subnet_cidrs" {
   description = "CIDR blocks for private subnets"
   type        = list(string)
   # TODO: Add validation to ensure number of CIDRs matches number of AZs
+  validation {
+    condition     = length(var.private_subnet_cidrs) == length(var.availability_zones)
+    error_message = "Number of private subnets must match number of availability zones."
+  }
 }
 
 variable "enable_dns_hostnames" {
