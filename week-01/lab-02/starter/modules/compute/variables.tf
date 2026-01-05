@@ -44,6 +44,10 @@ variable "instance_type" {
   type        = string
   default     = "t3.micro"
   # TODO: Add validation for valid instance types
+  validation {
+    condition     = contains(["t3.micro", "t3.small", "t3.medium"], var.instance_type)
+    error_message = "Instance type must be a valid t3 instance type (t3.micro, t3.small, t3.medium)."
+  }
 }
 
 # TODO: Add key name variable
@@ -61,6 +65,10 @@ variable "allowed_ssh_cidr" {
   description = "CIDR block allowed to SSH to the instance"
   type        = string
   # TODO: Add validation for CIDR format
+  validation {
+    condition     = can(cidrhost(var.allowed_ssh_cidr, 0))
+    error_message = "Must be a valid CIDR block."
+  }
 }
 
 # Database connection information
@@ -127,6 +135,10 @@ variable "wordpress_admin_email" {
   description = "WordPress admin email"
   type        = string
   # TODO: Add validation for email format
+  validation {
+    condition     = can(regex("^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$", var.wordpress_admin_email))
+    error_message = "Must be a valid email address."
+  }
 }
 
 # Optional customization

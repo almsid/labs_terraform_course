@@ -8,7 +8,7 @@ output "instance_id" {
   description = "ID of the EC2 instance"
   # TODO: Reference the EC2 instance
   # HINT: aws_instance.wordpress.id
-  value = ""  # TODO: Replace with actual instance ID
+  value = aws_instance.wordpress.id
 }
 
 # TODO: Output public IP address
@@ -16,7 +16,7 @@ output "instance_id" {
 output "public_ip" {
   description = "Public IP address of the instance"
   # TODO: Reference the instance public IP
-  value = ""  # TODO: Replace with actual public IP
+  value = aws_instance.wordpress.public_ip
 }
 
 # TODO: Output private IP address
@@ -24,7 +24,7 @@ output "public_ip" {
 output "private_ip" {
   description = "Private IP address of the instance"
   # TODO: Reference the instance private IP
-  value = ""  # TODO: Replace with actual private IP
+  value = aws_instance.wordpress.private_ip
 }
 
 # TODO: Output public DNS name
@@ -32,7 +32,7 @@ output "private_ip" {
 output "public_dns" {
   description = "Public DNS name of the instance"
   # TODO: Reference the instance public DNS
-  value = ""  # TODO: Replace with actual public DNS
+  value = aws_instance.wordpress.public_dns
 }
 
 # TODO: Output WordPress URL
@@ -41,7 +41,7 @@ output "wordpress_url" {
   description = "URL to access the WordPress site"
   # TODO: Construct the URL using the public IP
   # HINT: "http://${aws_instance.wordpress.public_ip}"
-  value = ""  # TODO: Replace with actual URL
+  value = "http://${aws_instance.wordpress.public_ip}"
 }
 
 # TODO: Output SSH command
@@ -50,7 +50,7 @@ output "ssh_command" {
   description = "SSH command to connect to the instance"
   # TODO: Construct SSH command
   # HINT: "ssh -i ~/.ssh/your-key ec2-user@${aws_instance.wordpress.public_ip}"
-  value = ""  # TODO: Replace with actual SSH command
+  value = "ssh -i ~/.ssh/${var.key_name}.pem ec2-user@${aws_instance.wordpress.public_ip}"
 }
 
 # TODO: Output security group ID
@@ -58,7 +58,7 @@ output "ssh_command" {
 output "security_group_id" {
   description = "ID of the instance security group"
   # TODO: Reference the security group
-  value = ""  # TODO: Replace with actual security group ID
+  value = aws_security_group.wordpress.id
 }
 
 # TODO: Output subnet ID
@@ -73,5 +73,5 @@ output "subnet_id" {
 output "availability_zone" {
   description = "Availability zone of the instance"
   # TODO: Reference the instance AZ
-  value = ""  # TODO: Replace with actual AZ
+  value = aws_instance.wordpress.availability_zone
 }
