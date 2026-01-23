@@ -54,6 +54,32 @@ cp -r wordpress/* .
 rm -rf wordpress latest.tar.gz
 
 # Configure WordPress
+# echo "Configuring WordPress..."
+# cp wp-config-sample.php wp-config.php
+
+# # Set database configuration
+# sed -i "s/database_name_here/wordpress/" wp-config.php
+# sed -i "s/username_here/wpuser/" wp-config.php
+# sed -i "s/password_here/WPpassword123!/" wp-config.php
+
+# # Generate and set unique authentication keys and salts
+# # This fetches random keys from the WordPress API
+# SALT=$(curl -s https://api.wordpress.org/secret-key/1.1/salt/)
+
+# # Remove the placeholder lines
+# sed -i "/AUTH_KEY/d" wp-config.php
+# sed -i "/SECURE_AUTH_KEY/d" wp-config.php
+# sed -i "/LOGGED_IN_KEY/d" wp-config.php
+# sed -i "/NONCE_KEY/d" wp-config.php
+# sed -i "/AUTH_SALT/d" wp-config.php
+# sed -i "/SECURE_AUTH_SALT/d" wp-config.php
+# sed -i "/LOGGED_IN_SALT/d" wp-config.php
+# sed -i "/NONCE_SALT/d" wp-config.php
+
+# # Append the new salts to the config file
+# echo "$SALT" >> wp-config.php
+
+# Configure WordPress
 echo "Configuring WordPress..."
 cp wp-config-sample.php wp-config.php
 
@@ -62,11 +88,14 @@ sed -i "s/database_name_here/wordpress/" wp-config.php
 sed -i "s/username_here/wpuser/" wp-config.php
 sed -i "s/password_here/WPpassword123!/" wp-config.php
 
-# Generate and set unique authentication keys and salts
-# This fetches random keys from the WordPress API
-SALT=$(curl -s https://api.wordpress.org/secret-key/1.1/salt/)
+# ---------------------------------------------------------
+# FIX START: Handle Salts Correctly
+# ---------------------------------------------------------
 
-# Remove the placeholder lines
+# 1. Download salts to a temporary file
+curl -s https://api.wordpress.org/secret-key/1.1/salt/ > /tmp/wp-salts.txt
+
+# 2. Delete the placeholder lines from wp-config.php (cleanup)
 sed -i "/AUTH_KEY/d" wp-config.php
 sed -i "/SECURE_AUTH_KEY/d" wp-config.php
 sed -i "/LOGGED_IN_KEY/d" wp-config.php
@@ -76,8 +105,16 @@ sed -i "/SECURE_AUTH_SALT/d" wp-config.php
 sed -i "/LOGGED_IN_SALT/d" wp-config.php
 sed -i "/NONCE_SALT/d" wp-config.php
 
-# Append the new salts to the config file
-echo "$SALT" >> wp-config.php
+# 3. Insert the new salts immediately after the DB_COLLATE definition
+#    This ensures they are defined BEFORE wp-settings.php is loaded
+sed -i "/DB_COLLATE/r /tmp/wp-salts.txt" wp-config.php
+
+# 4. Clean up temp file
+rm -f /tmp/wp-salts.txt
+
+# ---------------------------------------------------------
+# FIX END
+# ---------------------------------------------------------
 
 # Set proper file permissions
 echo "Setting file permissions..."

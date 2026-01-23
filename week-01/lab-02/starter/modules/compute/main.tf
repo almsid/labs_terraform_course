@@ -35,7 +35,6 @@ resource "aws_security_group" "wordpress" {
   name        = "${var.instance_name}-sg"
   description = "Security group for WordPress server"
   # TODO: Associate with the VPC
-  # TODO: Associate with the VPC
   vpc_id = var.vpc_id
 
   # TODO: SSH access rule
@@ -63,13 +62,16 @@ resource "aws_security_group" "wordpress" {
   # TODO: HTTPS access rule (optional)
   # CONDITIONAL: Only add if HTTPS is enabled
   # RESEARCH: How do you conditionally create resources in Terraform?
-  ingress {
-    description = "HTTPS access"
-    from_port   = 443
-    to_port     = 443
-    protocol    = "tcp"
-    # TODO: Set the source for secure web traffic
-    cidr_blocks = ["0.0.0.0/0"]
+  dynamic "ingress" {
+    for_each = var.enable_https ? [1] : []
+    content {
+      description = "HTTPS access"
+      from_port   = 443
+      to_port     = 443
+      protocol    = "tcp"
+      # TODO: Set the source for secure web traffic
+      cidr_blocks = ["0.0.0.0/0"]
+    }
   }
 
   # TODO: Database access rule

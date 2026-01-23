@@ -21,7 +21,7 @@ resource "aws_s3_bucket" "test_bucket" {
     Name         = "Lab 0 Test Bucket"
     Environment  = "Learning"
     ManagedBy    = "Terraform"
-    Student      = var.student_name  # Replace with your GitHub username
+    Student      = var.student_name # Replace with your GitHub username
     AutoTeardown = "8h"
   }
 }
